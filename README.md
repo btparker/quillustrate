@@ -22,7 +22,7 @@ Export an Alembic (.abc) file, selecting:
 * "Export Animation"
 
 
-![quill_abc_export](docs\images\quill_abc_export.png)
+![quill_abc_export](docs/images/quill_abc_export.png)
 
 Save where desired.
 
