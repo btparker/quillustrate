@@ -29,5 +29,5 @@ Save where desired.
 ### Importing Quill Alembic into Blender
 
 ```sh
-blender.exe --background --python "quillustrate\blender.py" -- --input "assets\quill_export_example.abc"
+blender.exe --background --python "quillustrate/blender.py" -- --alembic "assets/quill_export_example.abc"
 ```

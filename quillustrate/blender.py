@@ -36,7 +36,11 @@ def read_args():
         help='Path to the input Quill project folder',
         type=str,
     )
-
+    parser.add_argument(
+        '--output',
+        help='Path to the desired output folder',
+        type=str,
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -55,6 +59,23 @@ def import_alembic(abc_filepath):
     abc_filepath = os.path.abspath(abc_filepath)
     bpy.ops.wm.alembic_import(filepath=abc_filepath, as_background_job=False)
     return bpy.data.objects["Root"]
+
+
+def export_blend(blend_filepath):
+    bpy.ops.wm.save_as_mainfile(filepath=blend_filepath)
+
+
+def export_alembic(abc_filepath):
+    bpy.ops.wm.alembic_export(
+        filepath=abc_filepath,
+        selected=False,
+        renderable_only=True, 
+        visible_layers_only=False, 
+        flatten=False, 
+        vcolors=True, 
+        global_scale=1,
+        as_background_job=False,
+    )
 
 
 def create_flat_material():
@@ -92,16 +113,38 @@ def set_background_color_from_obj(background_color_name, gamma_correct=True):
     bpy.ops.object.delete()
 
 
-def main():
-    args = read_args()
-
-    clear_scene()
-    set_view_settings()
-    if args.alembic:
-        root_obj = import_alembic(args.alembic)
-        flat_mat = create_flat_material()
-        apply_material_to_quill_layers(root_obj, flat_mat)
+def process_quill_alembic(args):
+    root_obj = import_alembic(args.alembic)
+    flat_mat = create_flat_material()
+    apply_material_to_quill_layers(root_obj, flat_mat)
     if args.background_name:
         set_background_color_from_obj(args.background_name)
 
-main()
+    export(name="process_quill_alembic", output=args.output)
+    
+
+def export(name, output):
+
+    output_blend_path = os.path.join(
+        output,
+        name + ".blend"
+    )
+    export_blend(output_blend_path)
+    output_alembic_path = os.path.join(
+        output,
+        name + ".abc"
+    )
+    export_alembic(output_alembic_path)
+
+
+def main():
+    args = read_args()
+    clear_scene()
+    set_view_settings()
+
+    if args.alembic:
+        process_quill_alembic(args)
+
+
+if __name__ == '__main__':
+    main()
