@@ -1,1 +1,1 @@
-plumbum
+plumbum==1.6.9

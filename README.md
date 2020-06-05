@@ -1,7 +1,7 @@
 # quillustrate
 Odds and ends to interface with Quill, the VR drawing application
 
-## Installation
+## Setup
 
 Requires the following executables available in path:
 

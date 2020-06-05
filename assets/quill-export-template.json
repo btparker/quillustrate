@@ -1,0 +1,30 @@
+{
+  "Exporter": "Alembic",
+  "InputFile": "",
+  "ExtraInputs": [],
+  "Options": {
+    "AbortOnErrors": false,
+    "BakeTransforms": true,
+    "ColorSpace": "Gamma",
+    "ExcludeList": [],
+    "UseFullNames": false,
+    "ExportCurves": false,
+    "ExportHidden": false,
+    "ExportMeshes": true,
+    "ExportUVs": false,
+    "ExportAnimation": false,
+    "MaterialPerLayer": false,
+    "ExportExtraAttrs": false,
+    "FixFlip": false,
+    "SeparateAlphaChannel": false,
+    "Scale": 1.0,
+    "GroupExtraInputs": false,
+    "Optimize": {
+      "Optimize": false,
+      "OptimizeKeepOldLayers": false,
+      "OptimizeSimplifyThreshold": 0.02,
+      "OptimizeIncludeList": []
+    }
+  },
+  "OutputFile": ""
+}
