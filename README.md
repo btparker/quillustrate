@@ -12,6 +12,12 @@ Requires the following executables available in path:
 
 ## Running
 
+### Converting Quill binary to Quill ascii format
+
+```sh
+python3 bin/quill_converter.py --input <QuillProjectDirInput> --output <QuillProjectDirOutput>
+```
+
 ### Exporting an Alembic File from Quill (Manually)
 
 Export an Alembic (.abc) file, selecting:
