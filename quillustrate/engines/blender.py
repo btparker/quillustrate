@@ -11,7 +11,7 @@ class BlenderEngine(Engine):
         })
 
 
-    def run(self, options={}, output):
+    def run(self, options, output):
         python_entry = os.path.join(
             os.path.dirname(__file__),
             'blender.py',
