@@ -30,9 +30,9 @@ class QuillType(Enum):
 class QuillBrushType(object):
     MAPPING = {
         0: "LINE",
-        1: "RIBBON",
-        2: "CYLINDER",
-        3: "ELLIPSE",
+        1: "RIBBON", # ROUNDED_RIBBON
+        2: "CYLINDER", # CAPPED_CYLINDER
+        3: "ELLIPSE", # CAPPED_ELLIPSE
         4: "CUBE",
     }
     def __init__(self, code):
@@ -68,9 +68,6 @@ class QuillJsonEncoder(object):
                 continue
 
             quill_object_attr = getattr(quill_object, k)
-
-            # value = None
-            # is_item_quill_object =
 
             if isinstance(quill_object_attr, list):
                 child_items = quill_object_attr
@@ -284,6 +281,8 @@ class QuillSceneData(object):
 class QuillStateData(object):
     def __init__(self, proj_dir):
         input_state_json_path = os.path.join(proj_dir, 'State.json')
+        if not os.path.exists(input_state_json_path):
+            input_state_json_path = os.path.join(proj_dir, '~State.json')
         with open(input_state_json_path, 'r') as json_file:
             self.data = json.load(json_file)
 
