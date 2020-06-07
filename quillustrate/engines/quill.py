@@ -30,6 +30,24 @@ class BrushType(object):
         return BrushType(code)
 
 
+class QuillBinaryDecoder(object):
+    DECODER_MAPPINGS = {
+        "int16": (lambda bin: QuillBinaryDecoder.unpack('h', bin)),
+        "int32": (lambda bin: QuillBinaryDecoder.unpack('i', bin)),
+        "float": (lambda bin: QuillBinaryDecoder.unpack('f', bin)),
+        "bool": (lambda bin: QuillBinaryDecoder.unpack('?', bin)),
+    }
+
+    @classmethod
+    def unpack(cls, unpack_type, binary_chunk):
+        value, = struct.unpack(unpack_type, binary_chunk)
+        return value
+
+    @classmethod
+    def decode_value_from_binary(cls, value_type, binary_chunk):
+        return cls.DECODER_MAPPINGS[value_type](binary_chunk)
+
+
 class QuillObject(object):
     OFFSETS = {}
 
@@ -44,10 +62,6 @@ class QuillObject(object):
         return base64_data
 
     @classmethod
-    def get_size(cls):
-        return sum(item['size'] for k, item in cls.OFFSETS.items())
-
-    @classmethod
     def get_sorted_offset_items(cls):
         return sorted(cls.OFFSETS.items(), key=lambda x: x[1]["offset"])
 
@@ -56,14 +70,7 @@ class QuillObject(object):
         start = quill_object_offset + offset_item["offset"]
         end = quill_object_offset + offset_item["offset"] + offset_item["size"]
         binary_chunk = binary_data[start:end]
-        if offset_item["type"] == "int32":
-            value, = struct.unpack('i', binary_chunk)
-        elif offset_item["type"] == "int16":
-            value, = struct.unpack('h', binary_chunk)
-        elif offset_item["type"] == "float":
-            value, = struct.unpack('f', binary_chunk)
-        elif offset_item["type"] == "bool":
-            value, = struct.unpack('?', binary_chunk)
+        value = QuillBinaryDecoder.decode_value_from_binary(offset_item["type"], binary_chunk)
 
         return {
             "offset": offset_item["offset"],
@@ -279,6 +286,10 @@ class QuillVertexObject(QuillObject):
         self.color = color
         self.opacity = opacity
         self.width = width
+
+    @classmethod
+    def get_size(cls):
+        return sum(item['size'] for k, item in cls.OFFSETS.items())
 
     @classmethod
     def from_binary(cls, binary_data, quill_object_offset=0):
