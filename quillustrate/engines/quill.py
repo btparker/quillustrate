@@ -3,6 +3,7 @@ import json
 import codecs
 import struct
 from enum import Enum
+import ctypes
 from typing import List
 from functools import reduce
 from quillustrate.engines.engine import Engine
@@ -56,6 +57,9 @@ class QuillBrushType(object):
     def json_encode(self):
         return self.name
 
+    def encode(self):
+        return QuillBinaryEncoder.encode_value(QuillType.INT16, self.code)
+
 
 class QuillJsonEncoder(object):
     def run(self, quill_object):
@@ -86,15 +90,49 @@ class QuillJsonEncoder(object):
         return data
 
 class QuillBinaryEncoder(object):
-    def __init__(self):
-        self.binary_data = b''
+    ENCODER_VALUE_MAPPINGS = {
+        QuillType.INT16: (lambda value: QuillBinaryEncoder.pack('h', value)),
+        QuillType.INT32: (lambda value: QuillBinaryEncoder.pack('i', value)),
+        QuillType.FLOAT: (lambda value: QuillBinaryEncoder.pack('f', value)),
+        QuillType.BOOL: (lambda value: QuillBinaryEncoder.pack('?', value)),
+        QuillType.BRUSH_TYPE: (lambda brush_type: brush_type.encode()),
+    }
 
     def run(self, quill_object):
-        self.encode(quill_object)
-        return codecs.encode(self.binary_data, 'base64')
+        size = quill_object.get_binary_size()
+        print("Estimated Quill object size: {} bytes of data".format(size))
+        binary_data = self.encode(quill_object)
+        print("Encoded: {} bytes".format(len(binary_data)))
+        return binary_data
 
     def encode(self, quill_object):
-        return self.binary_data
+        binary = b''
+        for k, item in quill_object.OFFSETS.items():
+            if not hasattr(quill_object, k):
+                continue
+
+            quill_object_attr = getattr(quill_object, k)
+
+            if isinstance(quill_object_attr, list):
+                child_items = quill_object_attr
+                for child_item in child_items:
+                    binary += self.encode(child_item)
+            elif isinstance(quill_object_attr, QuillObject):
+                binary += self.encode(quill_object_attr)
+            elif hasattr(quill_object_attr, "encode"):
+                binary += quill_object_attr.encode()
+            else:
+                binary += self.encode_value(item["type"], quill_object_attr)
+
+        return binary
+
+    @classmethod
+    def encode_value(cls, value_type, value):
+        return cls.ENCODER_VALUE_MAPPINGS[value_type](value)
+
+    @classmethod
+    def pack(cls, unpack_type, value):
+        return struct.pack(unpack_type, value)
 
 class QuillBinaryDecoder(object):
     DECODER_VALUE_MAPPINGS = {
