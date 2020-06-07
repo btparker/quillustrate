@@ -61,33 +61,24 @@ class QuillBrushType(object):
         return QuillBinaryEncoder.encode_value(QuillType.INT16, self.code)
 
 
-class QuillJsonEncoder(object):
-    def run(self, quill_object):
-        return self.encode(quill_object)
-
-    def encode(self, quill_object):
-        data = {}
-        for k, item in quill_object.OFFSETS.items():
-            if not hasattr(quill_object, k):
-                continue
-
-            quill_object_attr = getattr(quill_object, k)
-
-            if isinstance(quill_object_attr, list):
-                child_items = quill_object_attr
-                value = []
-                for child_item in child_items:
-                    value.append(self.encode(child_item))
-            elif isinstance(quill_object_attr, QuillObject):
-                value = self.encode(quill_object_attr)
-            elif hasattr(quill_object_attr, "json_encode"):
-                value = quill_object_attr.json_encode()
-            else:
-                value = quill_object_attr
-
-            data[k] = value
-
-        return data
+class QuillJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, QuillObject):
+            quill_object = obj
+            data = {}
+            for k, item in quill_object.OFFSETS.items():
+                if not hasattr(quill_object, k):
+                    continue
+                quill_object_attr = getattr(quill_object, k)
+                if isinstance(quill_object_attr, list):
+                    data[k] = [self.default(o) for o in quill_object_attr]
+                else:
+                    data[k] =  quill_object_attr
+            return data
+        elif isinstance(obj, QuillBrushType):
+            return obj.name
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 class QuillBinaryEncoder(object):
     ENCODER_VALUE_MAPPINGS = {
@@ -342,21 +333,15 @@ class QuillFileData(object):
         self.write_binary(output_dir)
         self.write_ascii(output_dir)
 
-    def to_json(self) -> dict:
-        return QuillJsonEncoder().run(self.file_object)
-
-    def to_binary(self):
-        return QuillBinaryEncoder().run(self.file_object)
-
     def write_binary(self, output_dir):
         quill_qbin_path = os.path.join(output_dir, 'Quill.qbin')
         with open(quill_qbin_path, 'wb') as binary_file:
-            binary_file.write(self.to_binary())
+            binary_file.write(QuillBinaryEncoder().run(self.file_object))
 
     def write_ascii(self, output_dir):
         quill_qa_path = os.path.join(output_dir, 'Quill.qa')
         with open(quill_qa_path, 'w') as outfile:
-            json.dump(self.to_json(), outfile, indent=1)
+            json.dump(self.file_object, outfile, indent=1, cls=QuillJsonEncoder)
 
 
 class QuillProject(object):
